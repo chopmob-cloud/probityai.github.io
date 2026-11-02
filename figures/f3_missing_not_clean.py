@@ -12,8 +12,8 @@ thought cloud in the same ink holds a check: it believes the record is fine.
 Bottom panel: what probity-verify has in front of it. The same six passages, now standing over the source
 passages they came from, so the fifth place in the record is empty; nothing is drawn in it. Under it the
 source capture, all seven passages, with a tab hanging from its foot that prints source.html. One straight
-accent rung pairs each source passage with its record passage; the fifth rung, in loss ink, climbs into the
-empty place and ends in an open circle at its ceiling: the source has the passage, the record has none to pair with.
+accent rung pairs each source passage with its record passage; the fifth rung, in loss ink, rises to the
+record's foot like the others, with nothing above it: the source has the passage, the record has none to pair with.
 A brace gathers both rows into the lens, which prints a receipt with a cross in the same loss ink:
 contradicted, with the packet's reason line under it. The two readers stand at the same x, one per panel.
 The only words are what the readers print and the two file paths the packet binds.
@@ -115,14 +115,12 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
     for x in xs:
         fk.sheet(f, x, ys, *geo)
     # probity-verify pairs each source passage with its record passage, one straight rung per pair; the fifth
-    # rung climbs into the empty place, finds nothing and ends in an open circle at its ceiling, both in loss ink
+    # rung, in loss ink, rises to the record's foot like the other six and has nothing above it: absence shown by
+    # absence. Every mark drawn inside the empty place was read as a seventh page or a marker.
     for i, x in enumerate(xs):
         mx_ = x + sw_ / 2
         if i == HOLE:
-            ring = 11  # an open end, not a bar: reached, nothing there
-            cy_ = yb + 6 + ring  # the rung crosses the whole empty place; the circle sits at its ceiling
-            f.line(mx_, ys - 12, mx_, cy_ + ring, "loss", sw=4)
-            f.circle(mx_, cy_, ring, fill="card", stroke="loss", sw=4)
+            f.line(mx_, ys - 12, mx_, under + 2, "loss", sw=4)
         else:
             f.line(mx_, ys - 12, mx_, under + 2, "accent", sw=3)
     # a brace gathers both rows into the lens: it reads the two rows side by side

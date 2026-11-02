@@ -82,21 +82,29 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
         fk.sheet(f, x, yr, *geo)
     ey = yr + sh_ / 2
     er = lr * 1.25
-    fk.eye(f, gx, ey, er, ink="self")
+    # the eye stands right beside the record it reads, so what it has in front of it is the record alone
+    ex = xs[N - 2] + sw_ + 10 + 24 + er
+    fk.eye(f, ex, ey, er, ink="self")
     # the thought cloud stands up and right of the eye, clear of it, with the check inside; fine beside it
     cw, ch = rw + 30, gsize * 1.6
-    ccx, ccy = mx + 6 + cw / 2, ey - ch * 0.3
-    fk.thought(f, ccx, ccy, cw, ch, (gx + er * 0.8, ey - er * 0.6), ink="self")
+    ccx, ccy = ex + er + 34 + cw / 2, ey - ch * 0.3
+    fk.thought(f, ccx, ccy, cw, ch, (ex + er * 0.8, ey - er * 0.6), ink="self")
     g = ch * 0.5
     f.glyph("check", ccx - g / 2, ccy - g / 2, g, "self", sw=max(3.0, g * 0.13))
     fx = ccx + cw / 2 + ch * 0.3 + 12
     assert fx + fk.text_width(FINE, sz, "sans", 600) <= f.width - fk.PAD, "fine runs off the frame"
     f.text(fx, ccy + cap / 2, FINE, "fg", "sans", 600)
     rule_y = yr + sh_ + 10 + max(28, ch * 0.4)
-    f.line(fk.PAD, rule_y, f.width - fk.PAD, rule_y, "rule", sw=1.5)
     # bottom panel: the same six passages over the source passages they came from; the fifth place is empty
     tab_h = cap + 16
     yb = rule_y + 26 + tab_h + 10
+    # no divider between the panels: one dashed tie runs from the top record's foot to the bottom record's
+    # tab, so the two report.txt rows read as one file seen twice
+    t1 = (xs[0] - 10 + xs[N - 2] + sw_ + 10) / 2
+    t2 = (xs[0] - 10 + xs[N - 1] + sw_ + 10) / 2
+    y0, y2 = yr + sh_ + 10, yb - 10 - tab_h
+    jy = (y0 + y2) / 2
+    f.path(f"M{t1:.1f} {y0:.1f} L{t1:.1f} {jy:.1f} L{t2:.1f} {jy:.1f} L{t2:.1f} {y2:.1f}", stroke="rule", sw=2.5, dash="8 6")
     _frame(f, xs, yb, sw_, sh_, CASE["record_path"], below=False)
     for i, x in enumerate(xs):
         if i != HOLE:

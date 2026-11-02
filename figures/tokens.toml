@@ -13,7 +13,7 @@ byte    = "#6e7781"   # a byte cell at rest
 accent  = "#156d9e"   # the verifier and its route
 loss    = "#a94b00"   # a changed or refused element (marks only)
 absent  = "#9e3f86"   # a required element that is not there: not established, never failed (marks only)
-self    = "#007555"   # the producer's own view of itself (marks only)
+self    = "#5b4a99"   # a reader's own belief, neither a pass nor a loss, never green (marks only)
 
 [dark]
 card    = "#151b23"
@@ -25,7 +25,7 @@ byte    = "#8b949e"
 accent  = "#56b4e9"
 loss    = "#f1772e"
 absent  = "#d685c0"
-self    = "#2fbf8f"
+self    = "#a99be6"
 
 [type]
 # One size per layout. Wide figures are 1280 units and render at about 830 px on a GitHub README column

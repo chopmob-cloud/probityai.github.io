@@ -75,23 +75,26 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
     cap = fk.cap_height(sz, "sans", 600)
     x0 = fk.PAD + 10
     xs = [x0 + i * (sw_ + sgap) for i in range(N)]
-    # top panel: the record alone, its six passages packed, and the eye that trusts it
+    # top panel: the trusting reader first, then the record alone it looks at, its six passages packed. The reader
+    # stands at the left, out of the verdict column, so the panel reads "a looker, then the record" and nothing at the
+    # top stands where the bottom panel's printed verdict stands (a reader there was read as a passing verdict)
     yr = top
-    _frame(f, xs[: N - 1], yr, sw_, sh_, CASE["record_path"], below=False)
-    for x in xs[: N - 1]:
-        fk.sheet(f, x, yr, *geo)
     ey = yr + sh_ / 2
     er = lr * 1.25
-    # the eye stands right beside the record it reads, so what it has in front of it is the record alone
-    ex = xs[N - 2] + sw_ + 10 + 24 + er
-    fk.eye(f, ex, ey, er, ink="self")
-    # the thought cloud stands up and right of the eye, clear of it, with the check inside; fine beside it
-    # the cloud holds the one word the reader thinks, and nothing else: a check in here was read as "a check that
-    # passed" by the simple seat in five rounds out of five, which made the top panel the pass half of a pass/fail pair
     cw = max(rw + 30, fk.text_width(FINE, sz, "sans", 600) + 20)
     ch = gsize * 1.6
-    ccx, ccy = ex + er + 34 + cw / 2, ey - ch * 0.3
-    fk.thought(f, ccx, ccy, cw, ch, (ex + er * 0.8, ey - er * 0.6), ink="self")
+    # the cloud holds the one word the reader thinks, and nothing else: a check in here was read as "a check that
+    # passed" by the simple seat in five rounds out of five
+    ccx, ccy = x0 + cw / 2, ey - ch * 0.3
+    ex = x0 + cw + 34 + er
+    shift = ex + er + 24 + 10 - x0  # the record starts clear of the eye, as far from it as it stood before
+    xt = [x + shift for x in xs[: N - 1]]
+    assert xt[-1] + sw_ + 10 <= f.width - fk.PAD, "the top record runs off the frame"
+    _frame(f, xt, yr, sw_, sh_, CASE["record_path"], below=False)
+    for x in xt:
+        fk.sheet(f, x, yr, *geo)
+    fk.eye(f, ex, ey, er, ink="self")
+    fk.thought(f, ccx, ccy, cw, ch, (ex - er * 0.8, ey - er * 0.6), ink="self")
     f.text(ccx, ccy + cap / 2, FINE, "fg", "sans", 600, anchor="middle")
     rule_y = yr + sh_ + 10 + max(28, ch * 0.4)
     # bottom panel: the same six passages over the source passages they came from; the fifth place is empty
@@ -99,7 +102,7 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
     yb = rule_y + 26 + tab_h + 10
     # no divider between the panels: one dashed tie runs from the top record's foot to the bottom record's
     # tab, so the two report.txt rows read as one file seen twice
-    t1 = (xs[0] - 10 + xs[N - 2] + sw_ + 10) / 2
+    t1 = (xt[0] - 10 + xt[-1] + sw_ + 10) / 2
     t2 = (xs[0] - 10 + xs[N - 1] + sw_ + 10) / 2
     y0, y2 = yr + sh_ + 10, yb - 10 - tab_h
     jy = (y0 + y2) / 2

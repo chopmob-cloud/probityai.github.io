@@ -2,13 +2,14 @@
  "name": "f3-missing-not-clean",
  "layout": "wide",
  "width": 1280,
- "height": 420,
+ "height": 592,
  "text_size": 26,
- "alt": "Top: a record of seven passages with the fifth cut out and the record closed over the cut. A reader that trusts the record looks only at the record and says fine. Bottom: the source capture, all seven passages. probity-verify pairs each source passage with its passage in the record, finds the fifth has none, and returns contradicted, reason selected_span_missing_from_record. The two verdicts sit in one column.",
+ "alt": "Top: a reader that trusts the record has only the record in front of it, six passages with nothing to flag, and thinks it fine. Bottom: the same record over the source capture it came from, seven passages. probity-verify pairs each source passage with its passage in the record, finds the fifth has none, and returns contradicted, reason selected_span_missing_from_record.",
  "words": [
   "report.txt",
-  "source.html",
   "fine",
+  "report.txt",
+  "source.html",
   "contradicted",
   "selected_span_missing_from_record"
  ]

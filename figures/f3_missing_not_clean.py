@@ -2,24 +2,21 @@
 
 "Record" is probity-verify's own word for the stored report it checks against the source capture
 (adapters/source_coverage.py: a selected span found in the source and not in the record returns
-contradicted, selected_span_missing_from_record). The picture shows why the two readers disagree:
+contradicted, selected_span_missing_from_record). The picture separates the two readers' vantages, one
+panel each, divided by a thin rule:
 
-Top row: the record. Its passages stand over the source passages they came from, so every pairing rung is
-straight; where the fifth passage stood, the record's frame is pinched in round the empty place. A tab on its
-top edge prints report.txt, the path the packet binds for the record.
-Bottom row: the source capture, all seven passages in a frame with viewfinder corners, so it reads as the
-capture the record came from and not as a second record; a tab hanging from its foot prints source.html, the
-path the packet binds for the capture.
-probity-verify pairs every source passage with its record passage, one straight rung per pair, and a rail
-runs through the rungs into its lens. The source's fifth passage is ringed in loss ink; its rung climbs in the
-same ink and stops at the pinch under a stop bar: the source has the passage, the record has none to pair
-with. The record's empty place is ringed in the same ink, dashed: the hole is the record's. A dot marks
-where each other rung meets the rail. The lens prints a receipt with a cross in the same ink: contradicted, with the packet's reason line hung under it.
-The readers' column at the right: the eye, level with the record, in the trusting reader's own ink (self),
-looks left at the record alone through a cone of sight in that ink that covers the whole record, the dark
-dashed cut place too, and prints a slip with a check in the same ink: fine. The lens and its contradicted
-slip stand directly below it. The only words are what the readers print and the two file paths the packet
-binds.
+Top panel: what a reader that trusts the record has in front of it. The record alone, its six passages packed
+in a plain frame with a tab on its top edge that prints report.txt. Nothing in it is marked: a reader of the
+record alone has nothing to flag. The eye stands to its right in the trusting reader's own ink (self), and a
+thought cloud in the same ink holds a check: it believes the record is fine.
+Bottom panel: what probity-verify has in front of it. The same six passages, now standing over the source
+passages they came from, so the fifth place in the record is empty; nothing is drawn in it. Under it the
+source capture, all seven passages, with a tab hanging from its foot that prints source.html. One straight
+accent rung pairs each source passage with its record passage; the fifth rung, in loss ink, climbs into the
+empty place and stops there under a stop bar: the source has the passage, the record has none to pair with.
+A brace gathers both rows into the lens, which prints a receipt with a cross in the same loss ink:
+contradicted, with the packet's reason line under it. The two readers stand at the same x, one per panel.
+The only words are what the readers print and the two file paths the packet binds.
 """
 
 from __future__ import annotations
@@ -37,29 +34,11 @@ N, HOLE = 7, 4
 FINE = "fine"  # what a reader that trusts the record concludes
 TITLE = "A passage missing from the record is not a clean record"
 DESC = (
-    "Top: a record of seven passages with the fifth cut out and the record closed over the cut. A reader that "
-    "trusts the record looks only at the record and says fine. Bottom: the source capture, all seven passages. "
+    "Top: a reader that trusts the record has only the record in front of it, six passages with nothing to flag, "
+    "and thinks it fine. Bottom: the same record over the source capture it came from, seven passages. "
     "probity-verify pairs each source passage with its passage in the record, finds the fifth has none, and "
-    f"returns {CASE['decision']}, reason {CASE['reason']}. The two verdicts sit in one column."
+    f"returns {CASE['decision']}, reason {CASE['reason']}."
 )
-
-
-def _record_frame(f: fk.Fig, x0, x1, y0, y1, hx0, hx1) -> None:
-    """The record's frame from x0 to x1, top y0, foot y1, pinched shut between hx0 and hx1 (the place a
-    passage was cut out): its top dips and its foot rises to meet in a narrow waist, with no mark in it."""
-    r = 8
-    mid = (y0 + y1) / 2
-    neck = (y1 - y0) * 0.12  # half the waist's height: the frame stays one open piece through the waist
-    cx = (hx0 + hx1) / 2
-    d = (
-        f"M{x0 + r:.1f} {y0:.1f} L{hx0:.1f} {y0:.1f} Q{cx:.1f} {y0:.1f} {cx:.1f} {mid - neck:.1f} "
-        f"Q{cx:.1f} {y0:.1f} {hx1:.1f} {y0:.1f} L{x1 - r:.1f} {y0:.1f} Q{x1:.1f} {y0:.1f} {x1:.1f} {y0 + r:.1f} "
-        f"L{x1:.1f} {y1 - r:.1f} Q{x1:.1f} {y1:.1f} {x1 - r:.1f} {y1:.1f} L{hx1:.1f} {y1:.1f} "
-        f"Q{cx:.1f} {y1:.1f} {cx:.1f} {mid + neck:.1f} Q{cx:.1f} {y1:.1f} {hx0:.1f} {y1:.1f} "
-        f"L{x0 + r:.1f} {y1:.1f} Q{x0:.1f} {y1:.1f} {x0:.1f} {y1 - r:.1f} L{x0:.1f} {y0 + r:.1f} "
-        f"Q{x0:.1f} {y0:.1f} {x0 + r:.1f} {y0:.1f} Z"
-    )
-    f.path(d, stroke="rule", sw=2.5)
 
 
 def _tab(f: fk.Fig, cx, edge, name, below) -> float:
@@ -75,92 +54,83 @@ def _tab(f: fk.Fig, cx, edge, name, below) -> float:
     return y + h if below else y
 
 
+def _frame(f: fk.Fig, xs, y, sw_, sh_, tab, below) -> float:
+    """A plain framed row round the pages at xs, top y, with a file-name tab; returns the tab's far edge."""
+    fw = xs[-1] + sw_ - xs[0] + 20
+    f.rect(xs[0] - 10, y - 10, fw, sh_ + 20, stroke="rule", rx=8, sw=2.5)
+    edge = y + sh_ + 10 if below else y - 10
+    return _tab(f, xs[0] - 10 + fw / 2, edge, tab, below=below)
+
+
 def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
-    """Draw the figure with the record's top at top; returns the bottom of the last thing drawn."""
+    """Draw both panels with the top panel's record at top; returns the bottom of the last thing drawn."""
     sz = f.text_size
     sw_, sh_ = fk.sheet_size(*geo)
     rw = round(gsize * 1.9 * 0.74, 1)  # the receipt's width
     word_w = max(fk.text_width(w, sz, "sans", 600) for w in (FINE, CASE["decision"]))
     col_w = lr * 2.5 + 30 + rw + 16 + word_w
-    gx = f.width - fk.PAD - col_w + lr * 1.25  # the readers' glyph column
-    mx = gx + lr * 1.25 + 30  # the verdict marks' left edge
+    gx = f.width - fk.PAD - col_w + lr * 1.25  # the readers' glyph column, the same in both panels
+    mx = gx + lr * 1.25 + 30  # the verdicts' left edge
     tx = mx + rw + 16
+    cap = fk.cap_height(sz, "sans", 600)
     x0 = fk.PAD + 10
     xs = [x0 + i * (sw_ + sgap) for i in range(N)]
-    mid = [x + sw_ / 2 for x in xs]
-    cap = fk.cap_height(sz, "sans", 600)
-    yr = top  # the record's top
-    ys = yr + sh_ + 10 + 2 * (lr + 40)  # the source's top
-    under = yr + sh_ + 10  # the record frame's foot
-    fw, fh = xs[-1] + sw_ - xs[0] + 20, sh_ + 20
-    rx1 = xs[0] - 10 + fw
-    assert rx1 + 40 <= gx - lr * 1.25, "the rows run into the readers' column"
-    # the eye's sight: a cone in the trusting reader's own ink from the eye over the record row alone, the cut
-    # place lit inside it with the rest; drawn first so the record's sheets stand on it
+    # top panel: the record alone, its six passages packed, and the eye that trusts it
+    yr = top
+    _frame(f, xs[: N - 1], yr, sw_, sh_, CASE["record_path"], below=False)
+    for x in xs[: N - 1]:
+        fk.sheet(f, x, yr, *geo)
+    ey = yr + sh_ / 2
     er = lr * 1.25
-    ey = yr - 10 + fh / 2
-    bl, br, bt, bb = xs[0] - 16, rx1 + 8, yr - 16, yr - 4 + fh
-    f.path(
-        f"M{gx - er:.1f} {ey:.1f} L{br:.1f} {bt:.1f} L{bl:.1f} {bt:.1f} L{bl:.1f} {bb:.1f} L{br:.1f} {bb:.1f} Z",
-        fill="self",
-        opacity=0.22,
-    )
-    for edge in (bt, bb):
-        f.line(gx - er - 4, ey, br, edge, "self", sw=2.5)
-    # the record: six passages over the source passages they came from, the fifth place pinched shut
-    # where the fifth passage stood, only its dashed empty place is left inside the waist: a passage cut out
-    fk.sheet(f, xs[HOLE], yr, *geo, state="missing", loud=True)
-    hw5, hh5 = fk.sheet_size(*geo)
-    f.rect(xs[HOLE] - 7, yr - 7, hw5 + 14, hh5 + 14, stroke="loss", rx=6, sw=3.5, dash="7 5")
-    _record_frame(f, xs[0] - 10, rx1, yr - 10, yr - 10 + fh, xs[HOLE] - sgap / 2, xs[HOLE] + sw_ + sgap / 2)
-    f.rect(xs[0] - 10, ys - 10, fw, fh, stroke="rule", rx=8, sw=2.5)
-    # the source is a capture: viewfinder corners just outside its frame
-    cl, fx0, fy0 = 16, xs[0] - 16, ys - 16
-    for cx, cy, dx, dy in (
-        (fx0, fy0, 1, 1),
-        (fx0 + fw + 12, fy0, -1, 1),
-        (fx0, fy0 + fh + 12, 1, -1),
-        (fx0 + fw + 12, fy0 + fh + 12, -1, -1),
-    ):
-        f.path(
-            f"M{cx:.1f} {cy + dy * cl:.1f} L{cx:.1f} {cy:.1f} L{cx + dx * cl:.1f} {cy:.1f}",
-            stroke="fg",
-            sw=3,
-        )
-    for i, x in enumerate(xs):
-        fk.sheet(f, x, ys, *geo)
-        if i != HOLE:
-            fk.sheet(f, x, yr, *geo)
-    # the source's fifth passage, the one the record lacks, is ringed in loss ink: it is there in the source
-    sw5, sh5 = fk.sheet_size(*geo)
-    f.rect(xs[HOLE] - 7, ys - 7, sw5 + 14, sh5 + 14, stroke="loss", rx=6, sw=3.5)
-    # the record's tab and the source's tab name the two files the packet binds
-    tcx = (xs[0] - 10 + rx1) / 2
-    _tab(f, tcx, yr - 10, CASE["record_path"], below=False)
-    src_foot = _tab(f, tcx, ys - 10 + fh, CASE["source_path"], below=True)
-    # the eye stands in the readers' column, level with the record, and prints a slip with a check in its
-    # own ink: fine
     fk.eye(f, gx, ey, er, ink="self")
-    f.line(gx + er + 2, ey, mx - 12, ey, "self", sw=3)
-    fk.arrow(f, mx - 4, ey, "self", size=7)
-    fk.slip(f, mx, ey, gsize * 1.9, "check", "self")
-    f.text(tx, ey + cap / 2, FINE, "fg", "sans", 600)
-    # probity-verify pairs each source passage with its record passage, one straight rung per pair
-    for i, x in enumerate(mid):
-        if i == HOLE:
-            # the rung climbs from the ringed source passage and finds no passage: it stops at the pinch
-            # under a stop bar, all in loss ink
-            stop = under + 14
-            f.line(x, ys - 9, x, stop, "loss", sw=4)
-            f.line(x - 26, stop, x + 26, stop, "loss", sw=7)
-        else:
-            f.line(x, ys - 12, x, under + 2, "accent", sw=3)
-    # a rail runs through every rung and on into the lens: the lens reads the pairs the rungs make
-    yv = (under + ys - 10) / 2
-    f.line(mid[0], yv, gx - lr - 14, yv, "accent", sw=3)
-    for i, x in enumerate(mid):
+    # the thought cloud stands up and right of the eye, clear of it, with the check inside; fine beside it
+    cw, ch = rw + 30, gsize * 1.6
+    ccx, ccy = mx + 6 + cw / 2, ey - ch * 0.3
+    fk.thought(f, ccx, ccy, cw, ch, (gx + er * 0.8, ey - er * 0.6), ink="self")
+    g = ch * 0.5
+    f.glyph("check", ccx - g / 2, ccy - g / 2, g, "self", sw=max(3.0, g * 0.13))
+    fx = ccx + cw / 2 + ch * 0.3 + 12
+    assert fx + fk.text_width(FINE, sz, "sans", 600) <= f.width - fk.PAD, "fine runs off the frame"
+    f.text(fx, ccy + cap / 2, FINE, "fg", "sans", 600)
+    rule_y = yr + sh_ + 10 + max(28, ch * 0.4)
+    f.line(fk.PAD, rule_y, f.width - fk.PAD, rule_y, "rule", sw=1.5)
+    # bottom panel: the same six passages over the source passages they came from; the fifth place is empty
+    tab_h = cap + 16
+    yb = rule_y + 26 + tab_h + 10
+    _frame(f, xs, yb, sw_, sh_, CASE["record_path"], below=False)
+    for i, x in enumerate(xs):
         if i != HOLE:
-            f.circle(x, yv, 5, fill="accent")
+            fk.sheet(f, x, yb, *geo)
+    under = yb + sh_ + 10  # the record frame's foot
+    ys = under + 2 * (lr + 30) + 10  # the source's top
+    src_foot = _frame(f, xs, ys, sw_, sh_, CASE["source_path"], below=True)
+    for x in xs:
+        fk.sheet(f, x, ys, *geo)
+    # probity-verify pairs each source passage with its record passage, one straight rung per pair; the fifth
+    # rung climbs into the empty place, finds nothing and stops under a bar, both in loss ink
+    for i, x in enumerate(xs):
+        mx_ = x + sw_ / 2
+        if i == HOLE:
+            stop = yb + sh_ / 2
+            f.line(mx_, ys - 12, mx_, stop, "loss", sw=4)
+            f.line(mx_ - 26, stop, mx_ + 26, stop, "loss", sw=7)
+        else:
+            f.line(mx_, ys - 12, mx_, under + 2, "accent", sw=3)
+    # a brace gathers both rows into the lens: it reads the two rows side by side
+    rx1 = xs[-1] + sw_ + 10
+    bx = rx1 + 18
+    bt_, bb_ = yb - 10, ys + sh_ + 10
+    bm = (bt_ + bb_) / 2
+    f.path(
+        f"M{bx:.1f} {bt_:.1f} Q{bx + 12:.1f} {bt_:.1f} {bx + 12:.1f} {bt_ + 14:.1f} L{bx + 12:.1f} {bm - 14:.1f} "
+        f"Q{bx + 12:.1f} {bm:.1f} {bx + 24:.1f} {bm:.1f} Q{bx + 12:.1f} {bm:.1f} {bx + 12:.1f} {bm + 14:.1f} "
+        f"L{bx + 12:.1f} {bb_ - 14:.1f} Q{bx + 12:.1f} {bb_:.1f} {bx:.1f} {bb_:.1f}",
+        stroke="accent",
+        sw=3,
+    )
+    assert bx + 40 <= gx - lr, "the rows run into the readers' column"
+    yv = bm
+    f.line(bx + 26, yv, gx - lr - 12, yv, "accent", sw=3)
     fk.arrow(f, gx - lr - 4, yv, size=7)
     fk.lens(f, gx, yv, lr)
     f.line(gx + lr + 2, yv, mx - 12, yv, "accent", sw=3)

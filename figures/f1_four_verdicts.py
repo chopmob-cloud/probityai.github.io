@@ -1,19 +1,17 @@
 """F1 Four verdicts: one sealed archive, checked four ways, and what the verifier prints each time.
 
 Two panels, one above the other, divided by a thin rule.
-Panel 1 (arms 1 to 3 of demo/four-arms.sh): the archive, an archive box of three files with a padlock over
-their digest, fans into three rows. Each row reads left to right: the archive as the verifier gets it, the
-verifier's lens (blue, its glass ground with one bar), and the receipt it prints with the verdict glyph.
-Loss ink is only for damage: in row 2 the changed byte is one byte cell in loss ink, larger than its
-neighbours, a thin arrow in the same ink arcs from it to the padlock's shackle, which springs open, and the
-receipt's cross takes it too. In row 3 the missing file is a dark dashed empty
-place, so not-established never reads as failed.
-Panel 2 (arm 4) uses the same grammar: the same archive fans into two readings, the upper by the version 1
-lens, the lower by the version 2 lens (the same instrument made stronger, as the stricter verifier is), and
-in the wide layout a copy of the archive stands on each route before its lens, as on each row above. Each
-reading's route runs into one open file folder, and both receipts stand in it, torn feet showing over its low
-front flap: kept together. Each receipt carries the small lens of the version that printed it. Each lens has
-the verifier id its record carries printed beside it.
+Panel 1 (arms 1 to 3 of demo/four-arms.sh): the archive, a box of three files sealed by one closed padlock, fans
+into three rows. Each row reads left to right: the archive as the verifier gets it, the verifier's lens (blue)
+and the receipt it prints with the verdict glyph, then the verdict word and exit code. The padlock is the same in
+every row; what happened to the archive is drawn on its files. Row 2: a pencil in loss ink rests its point on one
+byte of the middle file, that one byte in the same ink: someone changed one byte. The receipt's cross takes the
+same ink. Row 3: where the middle file stood there is only a dashed footprint: a required file is missing, so
+not-established never reads as failed.
+Panel 2 (arm 4) uses the same grammar: the same archive fans into two readings, the upper by the version 1 lens,
+the lower by the version 2 lens (the same instrument made stronger and larger, as the stricter verifier is),
+each with the verifier id its record carries under it. Both routes run into one open file folder and both
+receipts stand in it, whole: kept together. The verdict both print sits beside the folder.
 Words and exit codes come from data/four-arms.toml; the row captions are the alt text, not words on the picture.
 """
 
@@ -43,11 +41,11 @@ INK = {
     "check": "fg",
     "cross": "loss",
     "query": "fg",
-}  # the cross takes the changed byte's ink: that byte is why the verifier refused
+}  # the cross takes the pencil's ink: that changed byte is why the verifier refused
 STATE = (
     {},
-    {"mark": (1, (1, 0)), "broken": True, "mark_k": 1.1},
-    {"missing": 1, "loud": True},
+    {"mark": (1, (1, 0))},
+    {"missing": 1},
 )
 LR, SH = 20, 62  # lens radius, receipt height
 
@@ -93,15 +91,14 @@ def _row(f: fk.Fig, k, bx, cy, geo, sgap, stacked, lr=LR, sh=SH) -> float:
     return _verdict(f, arm, sx + round(sh * 0.74, 1) + 26, cy, stacked)
 
 
-def _pair(f: Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, ids="right", copies=False) -> float:
+def _pair(f: fk.Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, narrow=False) -> float:
     """Panel 2: one archive at x0 centred on cy fans, as in panel 1, into two readings: the version 1 lens on
-    the upper row, the version 2 lens (the same instrument made stronger) on the lower row. Both routes run
-    into one open file folder, and both receipts stand in it. The verifier id each reading's record carries
-    (product text from data/four-arms.toml) is printed above the upper lens and below the lower one; where
-    the line is too short (ids="outside") the ids start at the archive and the folder sits at the right edge.
-    Returns the lowest y drawn."""
+    the upper route, the version 2 lens (the same instrument made stronger) on the lower. The verifier id each
+    reading's record carries (product text from data/four-arms.toml) sits under its own lens. Both routes run
+    into one open file folder and both receipts stand in it, whole; the verdict both print sits beside it
+    (under it in the narrow layout). Returns the lowest y drawn."""
+    arm = ARMS[3]
     bw, bh = fk.box_size(3, geo, sgap)
-    rw = round(SH * 0.74, 1)
     fk.box(f, x0, cy - bh / 2 + 6, geo=geo, sgap=sgap, lock_r=lr * 0.8)
     rows = (cy - pitch / 2, cy + pitch / 2)
     rx = x0 + bw + fan
@@ -115,22 +112,32 @@ def _pair(f: Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, ids="right", copies=F
         fk.arrow(f, rx - 6, ry, "rule", size=7)
     ends = []
     for k, ry in enumerate(rows):
-        if copies:
-            fk.box(f, rx, ry - bh / 2 + 6, geo=geo, sgap=sgap, lock_r=lr * 0.8)
-            ends.append(_read(f, rx + bw, ry, 0, lr, version=k + 1))
-        else:
-            f.line(rx - 4, ry, rx + 6, ry, "accent", sw=3)
-            ends.append(_read(f, rx, ry, 0, lr, version=k + 1))
-    # the receipts' place: one open folder; both routes run into it and both receipts stand in it
+        f.line(rx - 4, ry, rx + 6, ry, "accent", sw=3)
+        ends.append(_read(f, rx, ry, 0, lr, version=k + 1))
+    # the verifier id each reading's record carries, under its own lens
+    sz = f.text_size
+    cap = fk.cap_height(sz, "mono", 500)
+    v1, v2 = arm["verifier_ids"]
+    lx = rx + 30 + lr  # the lens centre (see _read)
+    low_text = 0.0
+    for vid, ry, rim in zip((v1, v2), rows, (lr, lr * 1.4)):
+        ty = ry + rim * 1.5 + 8 + cap
+        # under its lens; where the column is too narrow it ends at the frame's right margin, still under it
+        tx = min(lx - lr, f.width - fk.PAD - fk.text_width(vid, sz, "mono", 500))
+        assert tx <= lx, vid
+        f.text(tx, ty, vid, "fg", "mono", 500)
+        low_text = max(low_text, ty + sz * 0.3)
+    # the receipts' place: one open folder; both routes run into it and both receipts stand in it, whole
     sh2 = SH + 10
     rw = round(sh2 * 0.74, 1)
-    g = 12
+    g = 14
     fw = 2 * rw + 3 * g
-    px = max(ends) + 34
-    if ids == "outside":
+    # the folder stands clear of the longer id, so the ids read as the lenses' names, not the folder's
+    px = max(max(ends) + 40, lx - lr + fk.text_width(v2, sz, "mono", 500) + 30)
+    if narrow:
         px = f.width - fk.PAD - fw - 6
-    top = cy - sh2 / 2
-    fh = sh2 + 18
+    top = cy - sh2 / 2 - 14
+    fh = sh2 + 34
     for e, ry, ty in zip(ends, rows, (cy - 12, cy + 12)):
         x1 = px - 12
         f.path(
@@ -139,26 +146,18 @@ def _pair(f: Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, ids="right", copies=F
             sw=3,
         )
         fk.arrow(f, px - 4, ty, size=7)
-    fk.folder_back(f, px, top - 8, fw, fh)
-    # both receipts stand in the folder raised so their torn feet show over the low front flap: printed
-    # receipts, the same as the ones the panel above prints, not plain pages
-    lift = 10
+    fk.folder_back(f, px, top, fw, fh, ink="fg")
     for k in range(2):
-        fk.slip(f, px + g + k * (rw + g), cy - lift, sh2, "check", "fg", stamp=k + 1)
-    fk.folder_front(f, px, top - 8, fw, fh, lift + 11)  # its top edge sits just over the receipts' feet
-    # the verifier id each reading's record carries, by its own lens: above the upper, below the lower
-    sz = f.text_size
-    cap = fk.cap_height(sz, "mono", 500)
-    v1, v2 = ARMS[3]["verifier_ids"]
-    tx = x0 if ids == "outside" else (rx + bw + 6 if copies else rx - 4)
-    y1 = rows[0] - lr * 1.3 - 16
-    y2 = rows[1] + lr * 1.3 + 16 + cap
-    f.text(tx, y1, v1, "fg", "mono", 500)
-    f.text(tx, y2, v2, "fg", "mono", 500)
-    for vid in (v1, v2):
-        assert tx + fk.text_width(vid, sz, "mono", 500) <= f.width - fk.PAD, vid
-    low = max(y2 + sz * 0.3, top - 8 + fh) + 20
-    return low
+        fk.slip(f, px + g + k * (rw + g), cy - 4, sh2, "check", "fg")
+    # a low front flap below the receipts' torn feet: the folder's pocket, which hides none of them
+    fk.folder_front(f, px, top, fw, fh, 12, ink="fg")
+    if narrow:
+        vy = top + fh + 16 + sz
+        _verdict(f, arm, px, vy, False)
+        return max(low_text, vy + sz * 0.4) + 20
+    right = _verdict(f, arm, px + fw + 26, cy, False)
+    assert right <= f.width - fk.PAD, right
+    return max(low_text, top + fh) + 20
 
 
 def wide() -> fk.Fig:
@@ -188,7 +187,7 @@ def wide() -> fk.Fig:
     pitch2 = SH + 40
     c2 = rule_y + 30 + pitch2 / 2 + SH / 2 + 14
     pitch2 = max(pitch2, bh + 30)
-    low = _pair(f, pad, c2, geo, sgap, pitch2, fan=96, copies=True)
+    low = _pair(f, pad, c2, geo, sgap, pitch2, fan=96)
     f.height = round(low + 24)
     return f
 
@@ -209,7 +208,7 @@ def narrow() -> fk.Fig:
     # panel 2: the same archive fans into the version 1 and version 2 readings, one folder keeps both
     pitch2 = bh + 2 * f.text_size + 40
     c2 = rule_y + 30 + f.text_size + 18 + 18 * 1.3 + pitch2 / 2
-    low = _pair(f, pad, c2, geo, sgap, pitch2, 18, fan=70, ids="outside")
+    low = _pair(f, pad, c2, geo, sgap, pitch2, 18, fan=70, narrow=True)
     f.height = round(low + 24)
     return f
 

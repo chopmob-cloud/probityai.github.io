@@ -368,22 +368,17 @@ def sheet(
     pad=SPAD,
     state="present",
     mark=None,
-    loud=False,
-    mark_k=0.7,
 ):
-    """A file sheet. state "missing" draws only the empty place a sheet would stand in: a thin dashed
-    outline in rule ink with nothing inside. It carries no signal colour, because a coloured slot reads as a
-    bad sheet rather than an absent one. mark (col, row) is the one byte cell drawn in loss ink at the same
-    size as its neighbours: one changed byte, not a different kind of object."""
+    """A file sheet. state "missing" draws only the empty place a sheet would stand in (see below). mark
+    (col, row) is the one byte cell drawn in loss ink at the same size as its neighbours: one changed byte,
+    not a different kind of object."""
     w, h = sheet_size(cols, rows, cell, gap, pad)
-    outline = _eared(x, y, w, h, EAR)
     if state == "missing":
-        if loud:
-            # the empty place in dark ink and nothing inside: a mark inside it read as a file of its own
-            f.path(outline, fill="tile", stroke="fg", sw=4, dash="8 6")
-        else:
-            f.path(outline, stroke="rule", sw=2.5, dash="6 6")
+        # the place a file should stand: a dashed footprint with no dog-ear and nothing inside, so it reads as
+        # an absence and never as a blank page
+        f.rect(x, y, w, h, fill="card", stroke="fg", rx=3, sw=3, dash="8 6")
         return w, h
+    outline = _eared(x, y, w, h, EAR)
     f.path(outline, fill="tile", stroke="rule", sw=2, join="round")
     f.path(
         f"M{x + w - EAR:.1f} {y:.1f} L{x + w - EAR:.1f} {y + EAR:.1f} L{x + w:.1f} {y + EAR:.1f}",
@@ -398,57 +393,47 @@ def sheet(
                 continue
             f.rect(cx, cy, cell, cell, fill="byte", rx=2)
     if mark is not None:
-        # the changed byte: one grid cell in loss ink, larger than its neighbours (mark_k is half its side,
-        # in cells)
         c, r = mark
-        ccx = x + pad + c * (cell + gap) + cell / 2
-        ccy = top + r * (cell + gap) + cell / 2
-        k = cell * mark_k
-        f.rect(ccx - k, ccy - k, 2 * k, 2 * k, fill="loss", rx=2)
+        f.rect(x + pad + c * (cell + gap), top + r * (cell + gap), cell, cell, fill="loss", rx=2)
     return w, h
 
 
-def lock(f: Fig, cx, cy, r: float = 12, broken=False):
-    """The archive's signature: a padlock centred on (cx, cy) whose solid body carries a digest mark (#)
-    knocked out in the card colour, so it reads as a lock over a digest, not an award. r is half the body
-    width. broken fills the body with loss ink and flings the shackle wide open off its right post: the seal no
-    longer holds."""
+def lock(f: Fig, cx, cy, r: float = 12):
+    """The archive's seal: a closed padlock centred on (cx, cy), a solid body under a round shackle, the same in
+    every row. r is half the body width. It never changes: what happened to the archive is drawn on the files
+    (a pencil on a changed byte, a dashed place where a file is missing), not on the seal."""
     bw, bh = 2 * r, 1.6 * r
     bx, by = cx - r, cy - bh * 0.3
     sr = r * 0.62  # shackle radius
     sw = max(3.0, r * 0.32)
-    if broken:
-        f.path(
-            f"M{cx + sr:.1f} {by:.1f} L{cx + sr:.1f} {by - sr * 1.4:.1f} A{sr:.1f} {sr:.1f} 0 0 1 {cx + sr * 2.9:.1f} {by - sr * 0.9:.1f}",
-            stroke="loss",
-            sw=sw,
-        )
-    else:
-        f.path(
-            f"M{cx - sr:.1f} {by:.1f} L{cx - sr:.1f} {by - sr * 0.6:.1f} A{sr:.1f} {sr:.1f} 0 0 1 {cx + sr:.1f} {by - sr * 0.6:.1f} L{cx + sr:.1f} {by:.1f}",
-            stroke="fg",
-            sw=sw,
-        )
-    f.rect(bx, by, bw, bh, fill="loss" if broken else "fg", rx=r * 0.25)
-    hw, hs = r * 0.62, max(1.6, r * 0.13)
-    hy = by + bh / 2
-    for d in (-1, 1):
-        f.line(
-            cx + d * hw * 0.28 + hw * 0.08,
-            hy - hw * 0.55,
-            cx + d * hw * 0.28 - hw * 0.08,
-            hy + hw * 0.55,
-            "card",
-            sw=hs,
-        )
-        f.line(
-            cx - hw * 0.5,
-            hy + d * hw * 0.22,
-            cx + hw * 0.5,
-            hy + d * hw * 0.22,
-            "card",
-            sw=hs,
-        )
+    f.path(
+        f"M{cx - sr:.1f} {by:.1f} L{cx - sr:.1f} {by - sr * 0.6:.1f} A{sr:.1f} {sr:.1f} 0 0 1 {cx + sr:.1f} {by - sr * 0.6:.1f} L{cx + sr:.1f} {by:.1f}",
+        stroke="fg",
+        sw=sw,
+    )
+    f.rect(bx, by, bw, bh, fill="fg", rx=r * 0.25)
+    f.circle(cx, by + bh * 0.45, max(1.6, r * 0.16), fill="card")  # the keyhole
+
+
+def pencil(f: Fig, tx, ty, length=44.0, width=10.0, angle_deg=-45.0, ink="loss"):
+    """A pencil whose point rests on (tx, ty), its body running away from the point at angle_deg (screen
+    degrees, -45 is up and right): a solid body, a sharpened cone and its point. Something wrote here."""
+    import math
+
+    a = math.radians(angle_deg)
+    ux, uy = math.cos(a), math.sin(a)  # from the point toward the back end
+    nx, ny = -uy, ux  # across the body
+    cone = width * 1.1
+    hw = width / 2
+
+    def pt(d, o):
+        return f"{tx + ux * d + nx * o:.1f} {ty + uy * d + ny * o:.1f}"
+
+    # the body, from the cone's base to the back end
+    f.path(f"M{pt(cone, -hw)} L{pt(length, -hw)} L{pt(length, hw)} L{pt(cone, hw)} Z", fill=ink, stroke=ink, sw=1.5)
+    # the sharpened cone, bare wood, and its point in the pencil's ink
+    f.path(f"M{pt(cone, -hw)} L{pt(0, 0)} L{pt(cone, hw)} Z", fill="tile", stroke=ink, sw=2, join="round")
+    f.path(f"M{pt(cone * 0.38, -hw * 0.38)} L{pt(0, 0)} L{pt(cone * 0.38, hw * 0.38)} Z", fill=ink, stroke=ink, sw=1.5)
 
 
 BOX_M, BOX_FOOT = (
@@ -472,20 +457,15 @@ def box(
     mark=None,
     geo=(4, 3, CELL, GAP, SPAD),
     sgap=14,
-    broken=False,
     lock_r=14,
-    loud=False,
-    mark_k=0.7,
 ):
     """An archive box with its top-left at (x, y), the files' tops: n files stand in it, the front panel
-    covers their lower half, and the padlock sits on the panel's top edge. missing is the index of a file
-    that is not there (a dashed slot); mark is (index, (col, row)) for a changed byte, drawn in the files'
-    top row so it shows over the panel. With a mark on a broken box, a thin arrow in loss ink arcs from the
-    changed byte over the files to the sprung shackle: that byte is what opened the seal. Returns (width,
-    height)."""
+    covers their lowest part, and the closed padlock sits on the panel's top edge. missing is the index of a
+    file that is not there (a dashed footprint); mark is (index, (col, row)) for a changed byte, drawn in the
+    files' top row in loss ink with a pencil in the same ink resting its point on it. Returns (width, height)."""
     sw_, sh_ = sheet_size(*geo)
     w, h = box_size(n, geo, sgap)
-    panel = y + sh_ * 0.55
+    panel = y + sh_ * 0.64
     # the back wall, lower than the files so they stand up out of the box
     f.path(
         f"M{x:.1f} {panel:.1f} L{x:.1f} {y + sh_ * 0.3:.1f} L{x + w:.1f} {y + sh_ * 0.3:.1f} L{x + w:.1f} {panel:.1f}",
@@ -501,32 +481,20 @@ def box(
             *geo,
             state="missing" if missing == i else "present",
             mark=mark[1] if mark and mark[0] == i else None,
-            loud=loud,
-            mark_k=mark_k,
         )
     f.rect(x, panel, w, y + h - panel, fill="tile", stroke="rule", rx=5, sw=2.5)
     # the box's hand hole, low on the panel
     hw = min(46, w * 0.22)
     hy = panel + (y + h - panel) * 0.62
     f.rect(x + w / 2 - hw / 2, hy - 5, hw, 10, fill="card", stroke="rule", rx=5, sw=2)
-    lock(f, x + w - BOX_M - lock_r, panel, r=lock_r, broken=broken)
-    if mark is not None and broken:
+    lock(f, x + w - BOX_M - lock_r, panel, r=lock_r)
+    if mark is not None:
         i, (c, r) = mark
         cols, _rows, cell, gap, pad = geo
         ccx = x + BOX_M + i * (sw_ + sgap) + pad + c * (cell + gap) + cell / 2
-        k = cell * mark_k
-        top = y + pad + EAR / 2 + r * (cell + gap) + cell / 2 - k
-        lcx = x + w - BOX_M - lock_r
-        sr = lock_r * 0.62
-        ty = panel - 1.6 * lock_r * 0.3 - 6
-        tx = lcx - lock_r * 0.4
-        peak = y - 22
-        f.path(
-            f"M{ccx:.1f} {top - 3:.1f} C{ccx:.1f} {peak:.1f} {tx:.1f} {peak:.1f} {tx:.1f} {ty - 12:.1f}",
-            stroke="loss",
-            sw=3,
-        )
-        arrow(f, tx, ty, "loss", size=6, direction="down")
+        ccy = y + pad + EAR / 2 + r * (cell + gap) + cell / 2
+        # the point rests on the byte's upper right corner, so the byte it changed stays in sight
+        pencil(f, ccx + cell * 0.5, ccy - cell * 0.5, length=4 * (cell + gap) + 4, width=max(10.0, cell))
     return w, h
 
 
@@ -565,10 +533,10 @@ def lens_version(f: Fig, cx, cy, r=20, version=1, stroke="accent"):
     if version == 1:
         lens(f, cx, cy, r, stroke=stroke)
         return
-    R = r * 1.3
-    f.line(cx + R * 0.72, cy + R * 0.72, cx + R * 1.5, cy + R * 1.5, stroke, sw=7)
-    f.circle(cx, cy, R, fill="card", stroke=stroke, sw=5)
-    f.circle(cx, cy, R * 0.62, fill="tile", stroke=stroke, sw=3)
+    R = r * 1.4
+    f.line(cx + R * 0.72, cy + R * 0.72, cx + R * 1.5, cy + R * 1.5, stroke, sw=8)
+    f.circle(cx, cy, R, fill="card", stroke=stroke, sw=6)
+    f.circle(cx, cy, R * 0.62, fill="tile", stroke=stroke, sw=4)
 
 
 def wrench(f: Fig, cx, cy, r, angle_deg=-135.0, ink="fg"):
@@ -596,11 +564,9 @@ def wrench(f: Fig, cx, cy, r, angle_deg=-135.0, ink="fg"):
     jaw(kx, ky, a)  # the wrench's other end, open away
 
 
-def slip(f: Fig, x, cy, h, glyph, gink="fg", ink="rule", stamp=0):
+def slip(f: Fig, x, cy, h, glyph, gink="fg", ink="rule"):
     """What a verifier prints: a till receipt with its left edge at x, centred on cy, a straight top and a
-    torn zigzag foot, two printed lines and the verdict glyph. stamp=1 or 2 prints the small lens of the
-    verifier version that made it (a later version carries a second ring), so the record says who read it.
-    Returns the right edge."""
+    torn zigzag foot, two printed lines and the verdict glyph. Returns the right edge."""
     w = round(h * 0.74, 1)
     y = cy - h / 2
     teeth = 4
@@ -615,17 +581,8 @@ def slip(f: Fig, x, cy, h, glyph, gink="fg", ink="rule", stamp=0):
         stroke=ink,
         sw=2.5,
     )
-    if stamp:
-        sr = 5.5
-        scx, scy = x + 7 + sr, y + 13
-        f.circle(scx, scy, sr, stroke="accent", sw=2.5)
-        if stamp > 1:
-            f.circle(scx, scy, sr + 3.5, stroke="accent", sw=2)
-        f.line(scx + sr * 0.7, scy + sr * 0.7, scx + sr * 1.7, scy + sr * 1.7, "accent", sw=2.5)
-        f.line(scx + sr + 8, y + 12, x + w - 7, y + 12, "rule", sw=2.5)
-    else:
-        for k, right in ((0, w - 7), (1, w * 0.6)):
-            f.line(x + 7, y + 9 + k * 7, x + right, y + 9 + k * 7, "rule", sw=2.5)
+    for k, right in ((0, w - 7), (1, w * 0.6)):
+        f.line(x + 7, y + 9 + k * 7, x + right, y + 9 + k * 7, "rule", sw=2.5)
     g = w * 0.62
     f.glyph(
         glyph,

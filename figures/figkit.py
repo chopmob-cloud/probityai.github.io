@@ -611,8 +611,18 @@ def folder_back(f: Fig, x, y, w, h, ink="rule"):
 
 
 def folder_front(f: Fig, x, y, w, h, flap, ink="rule"):
-    """The folder's front flap: the lower `flap` of the back panel at (x, y, w, h), drawn over what it holds."""
-    f.rect(x - 3, y + h - flap, w + 6, flap, fill="tile", stroke=ink, rx=5, sw=2.5)
+    """The folder's front pocket over the back panel at (x, y, w, h), drawn over what it holds: exactly the
+    back's width, its top edge rising from 0.6 flap at the left to the full flap at the right, the slanted
+    lip of a file folder's front (a rectangle overhanging a low bar read as a laptop's base)."""
+    y1 = y + h
+    f.path(
+        f"M{x:.1f} {y1 - flap * 0.6:.1f} L{x + w:.1f} {y1 - flap:.1f} L{x + w:.1f} {y1 - 5:.1f} "
+        f"Q{x + w:.1f} {y1:.1f} {x + w - 5:.1f} {y1:.1f} L{x + 5:.1f} {y1:.1f} Q{x:.1f} {y1:.1f} {x:.1f} {y1 - 5:.1f} Z",
+        fill="tile",
+        stroke=ink,
+        sw=2.5,
+        join="round",
+    )
 
 
 def thought(f: Fig, cx, cy, w, h, toward, ink="fg"):

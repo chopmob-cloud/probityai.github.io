@@ -149,11 +149,11 @@ def _pair(f: fk.Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, narrow=False) -> f
             sw=3,
         )
         fk.arrow(f, px - 4, ty, size=7)
-    fk.folder_back(f, px, top, fw, fh, ink="fg")
+    fk.folder_back(f, px, top, fw, fh)
     for k in range(2):
-        fk.slip(f, px + g + k * (rw + g), cy - 4, sh2, "check", "fg")
-    # a low front flap below the receipts' torn feet: the folder's pocket, which hides none of them
-    fk.folder_front(f, px, top, fw, fh, 12, ink="fg")
+        fk.slip(f, px + g + k * (rw + g), cy - 10, sh2, "check", "fg")
+    # the folder's slanted front pocket, the back's own width, over the receipts' torn feet only
+    fk.folder_front(f, px, top, fw, fh, 30)
     if narrow:
         # over the folder's right end, clear of its tab and of the upper id
         vx = f.width - fk.PAD - fk.text_width(arm["verdict"], sz, "mono", 500)

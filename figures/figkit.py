@@ -429,8 +429,16 @@ def pencil(f: Fig, tx, ty, length=44.0, width=10.0, angle_deg=-45.0, ink="loss")
     def pt(d, o):
         return f"{tx + ux * d + nx * o:.1f} {ty + uy * d + ny * o:.1f}"
 
-    # the body, from the cone's base to the back end
-    f.path(f"M{pt(cone, -hw)} L{pt(length, -hw)} L{pt(length, hw)} L{pt(cone, hw)} Z", fill=ink, stroke=ink, sw=1.5)
+    # the body from the cone's base, then a metal ferrule band (fg) and a rounded eraser end: a pencil, not a brush
+    l1, l2 = length * 0.74, length * 0.86
+    f.path(f"M{pt(cone, -hw)} L{pt(l1, -hw)} L{pt(l1, hw)} L{pt(cone, hw)} Z", fill=ink, stroke=ink, sw=1.5)
+    f.path(f"M{pt(l1, -hw)} L{pt(l2, -hw)} L{pt(l2, hw)} L{pt(l1, hw)} Z", fill="fg", stroke="fg", sw=1.5)
+    f.path(
+        f"M{pt(l2, -hw)} L{pt(length - hw, -hw)} A{hw:.1f} {hw:.1f} 0 0 1 {pt(length - hw, hw)} L{pt(l2, hw)} Z",
+        fill="tile",
+        stroke=ink,
+        sw=2,
+    )
     # the sharpened cone, bare wood, and its point in the pencil's ink
     f.path(f"M{pt(cone, -hw)} L{pt(0, 0)} L{pt(cone, hw)} Z", fill="tile", stroke=ink, sw=2, join="round")
     f.path(f"M{pt(cone * 0.38, -hw * 0.38)} L{pt(0, 0)} L{pt(cone * 0.38, hw * 0.38)} Z", fill=ink, stroke=ink, sw=1.5)
@@ -483,10 +491,12 @@ def box(
             mark=mark[1] if mark and mark[0] == i else None,
         )
     f.rect(x, panel, w, y + h - panel, fill="tile", stroke="rule", rx=5, sw=2.5)
-    # the box's hand hole, low on the panel
-    hw = min(46, w * 0.22)
-    hy = panel + (y + h - panel) * 0.62
-    f.rect(x + w / 2 - hw / 2, hy - 5, hw, 10, fill="card", stroke="rule", rx=5, sw=2)
+    # the box's hand hole, low on the panel; the box with a pencil on it drops it, so the pencil's ferrule and
+    # eraser add no net mark (a redraw may add a mark only if it removes one)
+    if mark is None:
+        hw = min(46, w * 0.22)
+        hy = panel + (y + h - panel) * 0.62
+        f.rect(x + w / 2 - hw / 2, hy - 5, hw, 10, fill="card", stroke="rule", rx=5, sw=2)
     lock(f, x + w - BOX_M - lock_r, panel, r=lock_r)
     if mark is not None:
         i, (c, r) = mark

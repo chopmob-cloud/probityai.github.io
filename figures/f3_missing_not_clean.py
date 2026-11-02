@@ -13,7 +13,7 @@ Bottom panel: what probity-verify has in front of it. The same six passages, now
 passages they came from, so the fifth place in the record is empty; nothing is drawn in it. Under it the
 source capture, all seven passages, with a tab hanging from its foot that prints source.html. One straight
 accent rung pairs each source passage with its record passage; the fifth rung, in loss ink, climbs into the
-empty place and stops at its foot under a stop bar: the source has the passage, the record has none to pair with.
+empty place and stops at its ceiling under a stop bar: the source has the passage, the record has none to pair with.
 A brace gathers both rows into the lens, which prints a receipt with a cross in the same loss ink:
 contradicted, with the packet's reason line under it. The two readers stand at the same x, one per panel.
 The only words are what the readers print and the two file paths the packet binds.
@@ -119,7 +119,7 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
     for i, x in enumerate(xs):
         mx_ = x + sw_ / 2
         if i == HOLE:
-            stop = yb + sh_ - 6  # just inside the record's foot, so the empty place above it holds nothing
+            stop = yb + 6  # the rung crosses the whole empty place and stops at its ceiling: nothing to pair with
             f.line(mx_, ys - 12, mx_, stop, "loss", sw=4)
             f.line(mx_ - 26, stop, mx_ + 26, stop, "loss", sw=7)
         else:

@@ -8,7 +8,7 @@ panel each, divided by a thin rule:
 Top panel: what a reader that trusts the record has in front of it. The record alone, its six passages packed
 in a plain frame with a tab on its top edge that prints report.txt. Nothing in it is marked: a reader of the
 record alone has nothing to flag. The eye stands to its right in the trusting reader's own ink (self), and a
-thought cloud in the same ink holds a check: it believes the record is fine.
+thought cloud in the same ink holds the one word it thinks: fine. No check, no pass glyph: a belief, not a verdict.
 Bottom panel: what probity-verify has in front of it. The same six passages, now standing over the source
 passages they came from, so the fifth place in the record is empty; nothing is drawn in it. Under it the
 source capture, all seven passages, with a tab hanging from its foot that prints source.html. One straight
@@ -86,14 +86,13 @@ def _draw(f: fk.Fig, geo, sgap, top, gsize, reason_below, lr) -> float:
     ex = xs[N - 2] + sw_ + 10 + 24 + er
     fk.eye(f, ex, ey, er, ink="self")
     # the thought cloud stands up and right of the eye, clear of it, with the check inside; fine beside it
-    cw, ch = rw + 30, gsize * 1.6
+    # the cloud holds the one word the reader thinks, and nothing else: a check in here was read as "a check that
+    # passed" by the simple seat in five rounds out of five, which made the top panel the pass half of a pass/fail pair
+    cw = max(rw + 30, fk.text_width(FINE, sz, "sans", 600) + 20)
+    ch = gsize * 1.6
     ccx, ccy = ex + er + 34 + cw / 2, ey - ch * 0.3
     fk.thought(f, ccx, ccy, cw, ch, (ex + er * 0.8, ey - er * 0.6), ink="self")
-    g = ch * 0.5
-    f.glyph("check", ccx - g / 2, ccy - g / 2, g, "self", sw=max(3.0, g * 0.13))
-    fx = ccx + cw / 2 + ch * 0.3 + 12
-    assert fx + fk.text_width(FINE, sz, "sans", 600) <= f.width - fk.PAD, "fine runs off the frame"
-    f.text(fx, ccy + cap / 2, FINE, "fg", "sans", 600)
+    f.text(ccx, ccy + cap / 2, FINE, "fg", "sans", 600, anchor="middle")
     rule_y = yr + sh_ + 10 + max(28, ch * 0.4)
     # bottom panel: the same six passages over the source passages they came from; the fifth place is empty
     tab_h = cap + 16

@@ -99,7 +99,9 @@ def _pair(f: fk.Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, narrow=False) -> f
     (under it in the narrow layout). Returns the lowest y drawn."""
     arm = ARMS[3]
     bw, bh = fk.box_size(3, geo, sgap)
-    fk.box(f, x0, cy - bh / 2 + 6, geo=geo, sgap=sgap, lock_r=lr * 0.8)
+    # the archive's files as written pages (text lines, no cells): at this panel's scale a cell grid under a
+    # tray read as a skyline of windows
+    fk.box(f, x0, cy - bh / 2 + 6, geo=geo, sgap=sgap, lock_r=lr * 0.8, text=True)
     rows = (cy - pitch / 2, cy + pitch / 2)
     rx = x0 + bw + fan
     fx = x0 + bw + 10

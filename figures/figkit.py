@@ -368,10 +368,12 @@ def sheet(
     pad=SPAD,
     state="present",
     mark=None,
+    text=False,
 ):
     """A file sheet. state "missing" draws only the empty place a sheet would stand in (see below). mark
     (col, row) is the one byte cell drawn in loss ink at the same size as its neighbours: one changed byte,
-    not a different kind of object."""
+    not a different kind of object. text draws each row as one line of text instead of a row of cells, the
+    last line short, so a small sheet reads as a written page and never as a window grid."""
     w, h = sheet_size(cols, rows, cell, gap, pad)
     if state == "missing":
         # the place a file should stand: a dashed footprint with no dog-ear and nothing inside, so it reads as
@@ -386,6 +388,14 @@ def sheet(
         sw=2,
     )
     top = y + pad + EAR / 2
+    if text:
+        # a swap, not an addition: one bar per row replaces that row's cells
+        full = w - 2 * pad
+        lh = max(3.0, cell * 0.5)
+        for r in range(rows):
+            lw = full if r < rows - 1 else full * 0.6
+            f.rect(x + pad, top + r * (cell + gap) + (cell - lh) / 2, lw, lh, fill="byte", rx=lh / 2)
+        return w, h
     for r in range(rows):
         for c in range(cols):
             cx, cy = x + pad + c * (cell + gap), top + r * (cell + gap)
@@ -466,6 +476,7 @@ def box(
     geo=(4, 3, CELL, GAP, SPAD),
     sgap=14,
     lock_r=14,
+    text=False,
 ):
     """An archive box with its top-left at (x, y), the files' tops: n files stand in it, the front panel
     covers their lowest part, and the closed padlock sits on the panel's top edge. missing is the index of a
@@ -489,6 +500,7 @@ def box(
             *geo,
             state="missing" if missing == i else "present",
             mark=mark[1] if mark and mark[0] == i else None,
+            text=text,
         )
     f.rect(x, panel, w, y + h - panel, fill="tile", stroke="rule", rx=5, sw=2.5)
     # the box's hand hole, low on the panel; the box with a pencil on it drops it, so the pencil's ferrule and

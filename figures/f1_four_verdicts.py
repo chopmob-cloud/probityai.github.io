@@ -120,10 +120,13 @@ def _pair(f: fk.Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, narrow=False) -> f
     v1, v2 = arm["verifier_ids"]
     lx = rx + 30 + lr  # the lens centre (see _read)
     low_text = 0.0
-    for vid, ry, rim in zip((v1, v2), rows, (lr, lr * 1.4)):
-        ty = ry + rim * 1.5 + 8 + cap
+    for k, (vid, ry, rim) in enumerate(zip((v1, v2), rows, (lr, lr * 1.4))):
+        # under its lens; in the narrow layout the upper id sits over its lens, clear of the routes below it
+        ty = ry - rim - 12 if narrow and k == 0 else ry + rim * 1.5 + 8 + cap
         # under its lens; where the column is too narrow it ends at the frame's right margin, still under it
         tx = min(lx - lr, f.width - fk.PAD - fk.text_width(vid, sz, "mono", 500))
+        if narrow and k == 0:  # over its lens, ending at the lens's right rim, clear of the verdict to its right
+            tx = lx + lr - fk.text_width(vid, sz, "mono", 500)
         assert tx <= lx, vid
         f.text(tx, ty, vid, "fg", "mono", 500)
         low_text = max(low_text, ty + sz * 0.3)
@@ -152,9 +155,11 @@ def _pair(f: fk.Fig, x0, cy, geo, sgap, pitch, lr=LR, fan=96, narrow=False) -> f
     # a low front flap below the receipts' torn feet: the folder's pocket, which hides none of them
     fk.folder_front(f, px, top, fw, fh, 12, ink="fg")
     if narrow:
-        vy = top + fh + 16 + sz
-        _verdict(f, arm, px, vy, False)
-        return max(low_text, vy + sz * 0.4) + 20
+        # over the folder's right end, clear of its tab and of the upper id
+        vx = f.width - fk.PAD - fk.text_width(arm["verdict"], sz, "mono", 500)
+        vy = top - 20 - 14 - sz * 1.2 + sz * 0.2
+        _verdict(f, arm, vx, vy, True)
+        return low_text + 20
     right = _verdict(f, arm, px + fw + 26, cy, False)
     assert right <= f.width - fk.PAD, right
     return max(low_text, top + fh) + 20

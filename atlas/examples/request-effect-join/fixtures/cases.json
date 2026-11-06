@@ -678,24 +678,24 @@
       },
       "covering_decision": null,
       "attempt": {
+        "ref": "sha256:4e7c7239d61e7bbda8a8bcf16e8d5f20b61145d0616bf0b5f121e62e142cd026",
         "preimage": {
           "action_ref": "sha256:7821927e8e64a2b7405f12317946044ce89139ab8e0064d3ec6fa28da28107b5",
           "attempt_seq": 1,
           "executor_id": "fixture-dispatcher",
-          "ts_ms": 1791557048000,
+          "ts_ms": 1791557046500,
           "version": "request-effect-fixture-v1"
-        },
-        "ref": "sha256:5a4d4ca002b077045e6c2c03deb63bf545e2e60a579db468fa1a6e51463cea16"
+        }
       },
       "result": {
+        "ref": "sha256:caa0b2f6415544a5d47aab8602bd9e62b31fdb1892cc6689db110ae10f4d6a93",
         "preimage": {
-          "attempt_id": "sha256:5a4d4ca002b077045e6c2c03deb63bf545e2e60a579db468fa1a6e51463cea16",
+          "attempt_id": "sha256:4e7c7239d61e7bbda8a8bcf16e8d5f20b61145d0616bf0b5f121e62e142cd026",
           "outcome": "interrupted",
           "output_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-          "ts_ms": 1791557049000,
+          "ts_ms": 1791557047000,
           "version": "request-effect-fixture-v1"
-        },
-        "ref": "sha256:2aa5e4c8e532cd71220efc40bb5b7c2d94a7109f62c05a183fedf1f0ccc2fe39"
+        }
       },
       "later_observation": null
     }
